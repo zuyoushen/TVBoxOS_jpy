@@ -15,8 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.bean.SourceBean;
-import com.github.tvbox.osc.util.HawkConfig;
-import com.orhanobut.hawk.Hawk;
+import com.github.tvbox.osc.util.SearchHelper;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,18 +35,19 @@ public class CheckboxSearchAdapter extends ListAdapter<SourceBean, CheckboxSearc
 
     }
 
-    private void setCheckedSource(HashMap<String, SourceBean> checkedSources) {
+    private void setCheckedSource(HashMap<String, String> checkedSources) {
         mCheckedSources = checkedSources;
     }
 
     private ArrayList<SourceBean> data = new ArrayList<>();
-    public HashMap<String, SourceBean> mCheckedSources = new HashMap<>();
+    public HashMap<String, String> mCheckedSources = new HashMap<>();
 
-    public void setData(List<SourceBean> newData, HashMap<String, SourceBean> checkedSources) {
+    public void setData(List<SourceBean> newData, HashMap<String, String> checkedSources) {
         data.clear();
         data.addAll(newData);
         setCheckedSource(checkedSources);
         notifyDataSetChanged();
+        SearchHelper.putCheckedSources(checkedSources);
     }
 
 
@@ -57,24 +57,25 @@ public class CheckboxSearchAdapter extends ListAdapter<SourceBean, CheckboxSearc
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, final int position) {
-        SourceBean sourceBean = data.get(position);
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        int pos = holder.getAdapterPosition();
+        SourceBean sourceBean = data.get(pos);
         holder.oneSearchSource.setOnCheckedChangeListener(null);
         holder.oneSearchSource.setText(sourceBean.getName());
         if (mCheckedSources != null) {
             holder.oneSearchSource.setChecked(mCheckedSources.containsKey(sourceBean.getKey()));
-            Hawk.put(HawkConfig.SOURCES_FOR_SEARCH, mCheckedSources);
         }
         holder.oneSearchSource.setTag(sourceBean);
         holder.oneSearchSource.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    mCheckedSources.put(sourceBean.getKey(), sourceBean);
+                    mCheckedSources.put(sourceBean.getKey(), "1");
                 } else {
                     mCheckedSources.remove(sourceBean.getKey());
                 }
-                notifyItemChanged(position);
+                SearchHelper.putCheckedSource(sourceBean.getKey(), isChecked);
+                notifyItemChanged(pos);
             }
         });
     }
